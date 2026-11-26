@@ -179,7 +179,7 @@ export default function App() {
             activeStage={voice.pipelineStage}
             stageDetail={voice.pipelineDetail}
             metrics={voice.metrics}
-            llmModel={state.health?.llm_model ?? 'gemini-2.5-flash'}
+            llmModel={state.health?.llm_model ?? 'gemini-3.1-flash-lite'}
             onSaveConfig={saveConfig}
           />
         )}
