@@ -1,0 +1,13 @@
+[project]
+name = "meridian-clinic-voice-ai"
+version = "2.0.0"
+description = "Production-grade Pipecat voice AI doctor appointment assistant with real-time clinical dashboard"
+requires-python = ">=3.11,<3.14"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
