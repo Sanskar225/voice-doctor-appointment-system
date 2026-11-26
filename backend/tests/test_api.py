@@ -124,3 +124,25 @@ def test_snapshot_booking_conflict_audit_calls_and_cancel_flow(tmp_path: Path) -
         tr_res = client.get(f"/api/v1/calls/{call_data['call_id']}/transcript")
         assert tr_res.status_code == 200
         assert tr_res.json() == []
+
+
+def test_readiness_probe_and_security_headers(tmp_path: Path, monkeypatch) -> None:
+    app = create_app(Settings(db_path=tmp_path / "readiness_test.db"))
+    with TestClient(app) as client:
+        res = client.get("/api/v1/readiness")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["ready"] is True
+        assert body["db"] == "ok"
+        assert body["version"] == "2.1.0"
+        assert res.headers.get("X-Request-ID")
+        assert res.headers.get("X-Content-Type-Options") == "nosniff"
+        assert res.headers.get("X-Frame-Options") == "DENY"
+        assert res.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+
+        # Simulate DB outage -> readiness probe returns 503 Service Unavailable
+        monkeypatch.setattr(app.state.container.db, "ping", lambda: False)
+        degraded = client.get("/api/v1/readiness")
+        assert degraded.status_code == 503
+        assert degraded.json()["ready"] is False
+        assert degraded.json()["db"] == "error"

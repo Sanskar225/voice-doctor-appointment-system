@@ -240,6 +240,12 @@ class DatabaseManager:
         finally:
             conn.close()
 
+    def ping(self) -> bool:
+        """Verify live SQLite WAL connectivity for readiness probes."""
+        with self.read_connection() as conn:
+            row = conn.execute("SELECT 1").fetchone()
+            return bool(row and row[0] == 1)
+
     @contextmanager
     def write_transaction(self) -> Iterator[sqlite3.Connection]:
         """Acquire a serialized BEGIN IMMEDIATE transaction to eliminate write races."""

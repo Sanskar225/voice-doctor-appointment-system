@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse
 
 from ..domain.models import (
     AppointmentDTO,
@@ -13,6 +16,7 @@ from ..domain.models import (
     ClinicSnapshotDTO,
     DoctorDTO,
     HealthDTO,
+    ReadinessDTO,
     UpdateClinicConfigCommand,
 )
 from .container import AppContainer, get_container
@@ -32,6 +36,26 @@ async def get_health(container: AppContainer = Depends(get_container)) -> Health
         active_calls=container.session_manager.active_count,
         state_version=container.event_bus.state_version,
     )
+
+
+@router.get("/readiness", response_model=ReadinessDTO)
+async def get_readiness(
+    container: AppContainer = Depends(get_container),
+) -> ReadinessDTO | JSONResponse:
+    s = container.settings
+    try:
+        db_ok = await asyncio.to_thread(container.db.ping)
+    except Exception:
+        db_ok = False
+    payload = ReadinessDTO(
+        ready=db_ok,
+        db="ok" if db_ok else "error",
+        voice_ready=s.voice_ready,
+        version=s.app_version,
+    )
+    if not db_ok:
+        return JSONResponse(status_code=503, content=payload.model_dump())
+    return payload
 
 
 @router.get("/config", response_model=ClinicConfigDTO)

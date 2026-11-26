@@ -63,6 +63,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         response: Response = await call_next(request)
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         response.headers["X-Request-ID"] = req_id
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         if not request.url.path.endswith("/events"):
             logger.debug(
                 "%s %s -> %d (%.1fms) req=%s",
