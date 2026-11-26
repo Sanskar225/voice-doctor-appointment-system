@@ -25,6 +25,7 @@ from app.infrastructure.event_bus import EventBus
 from app.infrastructure.repositories import ClinicRepository
 from app.services.appointment_service import AppointmentService
 from app.voice.observers import AssistantSpeechObserver
+from app.voice.pipeline import GeminiExpressAwareLLMService
 from app.voice.session import CallSession
 from app.voice.tools import ClinicToolDispatcher, build_tools_schema
 
@@ -74,6 +75,14 @@ def test_pipecat_service_settings_instantiate_cleanly() -> None:
     tools = build_tools_schema()
     assert stt is not None and llm is not None and tts is not None
     assert len(tools.standard_tools) == 3
+
+
+def test_gemini_llm_routes_vertex_express_and_ai_studio_keys() -> None:
+    express = GeminiExpressAwareLLMService(api_key="AQ.test-express-key")
+    assert express._client._api_client.vertexai is True
+
+    studio = GeminiExpressAwareLLMService(api_key="AIzaTestStudioKey")
+    assert not studio._client._api_client.vertexai
 
 
 def test_tool_dispatcher_enforces_readback_state_machine_and_emits_verified(tmp_path: Path) -> None:

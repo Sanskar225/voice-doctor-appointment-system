@@ -9,6 +9,7 @@ from typing import Any
 
 import aiohttp
 from fastapi import WebSocket
+from google import genai
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.frames.frames import LLMRunFrame
@@ -44,6 +45,16 @@ from .session import CallSession, CallSessionManager
 from .tools import ClinicToolDispatcher, build_tools_schema
 
 logger = logging.getLogger("aurelia.pipeline")
+
+
+class GeminiExpressAwareLLMService(GoogleLLMService):
+    """Supports both Google AI Studio (AIza...) and Vertex AI Express Mode (AQ....) keys."""
+
+    def create_client(self) -> None:
+        if self._api_key and self._api_key.startswith("AQ."):
+            self._client = genai.Client(vertexai=True, api_key=self._api_key)
+        else:
+            super().create_client()
 
 
 def _build_stt_keyterms(doctors: list[DoctorDTO], config: ClinicConfigDTO) -> list[str]:
@@ -163,7 +174,7 @@ async def run_voice_session(
                     ),
                 )
 
-            llm = GoogleLLMService(
+            llm = GeminiExpressAwareLLMService(
                 api_key=settings.gemini_api_key,
                 settings=GoogleLLMService.Settings(
                     model=settings.gemini_model,
