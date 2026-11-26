@@ -1,5 +1,7 @@
 # Aurelia Health — Voice AI Doctor Appointment Assistant
 
+[![CI](https://github.com/Sanskar225/voice-doctor-appointment-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Sanskar225/voice-doctor-appointment-system/actions/workflows/ci.yml)
+
 Real-time voice AI doctor appointment receptionist built with **Pipecat**, **ElevenLabs (STT + TTS)**, **Google Gemini**, **Silero VAD**, and a live **React + TypeScript** clinical front-desk dashboard.
 
 Callers speak directly from the browser to **Maya**, the clinic receptionist. Callers are identified strictly by the phone number they say out loud — no login, OTP, or caller ID. Maya reads the number back for explicit confirmation before booking or cancelling, and every slot/appointment change reflects live across the dashboard.
@@ -20,7 +22,7 @@ UserSpeechObserver ──► Call-Scoped SSE (/api/v1/events?call_id=...)
    ▼
 LLMContextAggregatorPair + SileroVADAnalyzer (turn detection & barge-in)
    ▼
-GoogleLLMService (Gemini 2.5 Flash, thinking_budget=0)
+GoogleLLMService (Gemini 3.1 Flash Lite)
    ├── check_doctor_availability()  ──► AppointmentService ──► SQLite (WAL)
    ├── book_appointment()           ──► Atomic BEGIN IMMEDIATE + Clinic SSE delta
    └── cancel_appointment()         ──► Atomic slot reopen    + Clinic SSE delta
@@ -66,7 +68,7 @@ For deep-dive design rationale (latency tuning, concurrency invariants, SSE stat
 ```
 
 ### Designed for Both SDE & FDE Workflows
-- **SDE Foundations**: Hexagonal ports (`ClinicRepositoryPort`, `EventPublisherPort`), explicit `AppContainer` DI, SQLite WAL with numbered `schema_migrations`, database-level partial unique index + state `CHECK` constraints, `PhoneReadbackTracker` state-machine policy, off-loop atomic transactions, and 11 automated tests (`pytest -v`).
+- **SDE Foundations**: Hexagonal ports (`ClinicRepositoryPort`, `EventPublisherPort`), explicit `AppContainer` DI, SQLite WAL with numbered `schema_migrations`, database-level partial unique index + state `CHECK` constraints, `PhoneReadbackTracker` state-machine policy, off-loop atomic transactions, deep `/api/v1/readiness` DB probe + security response headers, GitHub Actions CI, and 13 automated tests (`pytest -v`).
 - **FDE Client Deployment & Observability**:
   - **Live Client Configuration (`Agent & Pipeline`)**: Customize clinic name, receptionist name, greeting tone (`Warm` / `Formal`), TTS speech cadence, and strict phone read-back policy via `PATCH /api/v1/config` — takes effect on the very next call with **zero restart**.
   - **Call Logs & Latency Telemetry (`Call Logs`)**: Durable SQLite `call_sessions` + `call_transcripts` recording every turn, tool execution duration (`ms`), and Gemini Time-to-First-Token (`TTFT ms`) alongside live pipeline stage illumination.
@@ -119,3 +121,15 @@ npm run dev
 ```
 
 Open **http://localhost:5173**, click **Try Call**, grant microphone permission, and speak naturally.
+
+### 4. Production Docker Run (Optional)
+
+Run the full stack behind an Nginx reverse proxy (configured for unbuffered SSE and bidirectional 16 kHz PCM WebSockets) with persistent SQLite WAL storage:
+
+```bash
+cp .env.example .env   # add ELEVENLABS_API_KEY and GEMINI_API_KEY
+docker compose up --build
+```
+
+- Dashboard + API/WS proxy: **http://localhost:5173**
+- Backend liveness & deep DB readiness probes: `GET /api/v1/health` · `GET /api/v1/readiness`

@@ -188,6 +188,13 @@ class HealthDTO(BaseModel):
     state_version: int
 
 
+class ReadinessDTO(BaseModel):
+    ready: bool
+    db: Literal["ok", "error"]
+    voice_ready: bool
+    version: str
+
+
 class EventEnvelope(BaseModel):
     """Unified envelope for clinic-wide domain events and call-scoped voice telemetry."""
 
