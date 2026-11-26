@@ -101,7 +101,7 @@ export function useClinicSync() {
 
         if (type === 'stream.connected') {
           dispatch({ type: 'STREAM_STATUS', status: 'live' });
-          if (versionRef.current > 0 && version > versionRef.current) {
+          if (versionRef.current === 0 || version > versionRef.current) {
             void syncSnapshot();
           }
           return;

@@ -77,8 +77,8 @@ For deep-dive design rationale (latency tuning, concurrency invariants, SSE stat
 - **Voice Framework**: Python 3.12 + [Pipecat](https://github.com/pipecat-ai/pipecat) (`pipecat-ai>=1.0.0`)
 - **VAD**: Silero VAD (`SileroVADAnalyzer`)
 - **STT**: ElevenLabs Scribe v2 (`ElevenLabsRealtimeSTTService` with `ELEVENLABS_STT_MODE=segmented` fallback)
-- **LLM**: **Google Gemini 2.5 Flash** (`GoogleLLMService`, `thinking_budget=0`, free quota via Google AI Studio)
-- **TTS**: ElevenLabs Flash v2.5 (`ElevenLabsTTSService`, `eleven_flash_v2_5`)
+- **LLM**: **Google Gemini 3.1 Flash Lite** (`GoogleLLMService`, ultra-low latency free tier via Google AI Studio; supports opt-in Vertex AI Express Mode via `GEMINI_USE_VERTEX=true`)
+- **TTS**: ElevenLabs Flash v2.5 (`ElevenLabsTTSService`, `eleven_flash_v2_5`, free-tier premade voice Sarah)
 - **Database**: SQLite in WAL mode (`backend/clinic.db`, auto-seeded with 5 physicians across 5 specialties)
 - **Frontend**: React 18, TypeScript, Vite, Web Audio API
 

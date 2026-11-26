@@ -48,10 +48,14 @@ logger = logging.getLogger("aurelia.pipeline")
 
 
 class GeminiExpressAwareLLMService(GoogleLLMService):
-    """Supports both Google AI Studio (AIza...) and Vertex AI Express Mode (AQ....) keys."""
+    """Supports standard Google AI Studio keys (default) and opt-in Vertex AI Express Mode."""
+
+    def __init__(self, *, use_vertex: bool = False, **kwargs: Any) -> None:
+        self._use_vertex = use_vertex
+        super().__init__(**kwargs)
 
     def create_client(self) -> None:
-        if self._api_key and self._api_key.startswith("AQ."):
+        if self._use_vertex:
             self._client = genai.Client(vertexai=True, api_key=self._api_key)
         else:
             super().create_client()
@@ -174,14 +178,20 @@ async def run_voice_session(
                     ),
                 )
 
+            llm_settings_kwargs: dict[str, Any] = {
+                "model": settings.gemini_model,
+                "system_instruction": _build_system_prompt(doctors, config),
+                "temperature": 0.35,
+            }
+            if "2.5" in settings.gemini_model:
+                llm_settings_kwargs["thinking"] = GoogleLLMService.ThinkingConfig(
+                    thinking_budget=0
+                )
+
             llm = GeminiExpressAwareLLMService(
                 api_key=settings.gemini_api_key,
-                settings=GoogleLLMService.Settings(
-                    model=settings.gemini_model,
-                    system_instruction=_build_system_prompt(doctors, config),
-                    temperature=0.35,
-                    thinking=GoogleLLMService.ThinkingConfig(thinking_budget=0),
-                ),
+                use_vertex=settings.gemini_use_vertex,
+                settings=GoogleLLMService.Settings(**llm_settings_kwargs),
             )
 
             tts = ElevenLabsTTSService(

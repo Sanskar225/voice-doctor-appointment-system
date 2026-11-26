@@ -78,10 +78,10 @@ def test_pipecat_service_settings_instantiate_cleanly() -> None:
 
 
 def test_gemini_llm_routes_vertex_express_and_ai_studio_keys() -> None:
-    express = GeminiExpressAwareLLMService(api_key="AQ.test-express-key")
+    express = GeminiExpressAwareLLMService(api_key="AQ.test-express-key", use_vertex=True)
     assert express._client._api_client.vertexai is True
 
-    studio = GeminiExpressAwareLLMService(api_key="AIzaTestStudioKey")
+    studio = GeminiExpressAwareLLMService(api_key="AQ.test-studio-key", use_vertex=False)
     assert not studio._client._api_client.vertexai
 
 

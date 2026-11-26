@@ -29,11 +29,12 @@ class Settings(BaseModel):
 
     # Voice pipeline & providers
     elevenlabs_api_key: str = ""
-    elevenlabs_voice_id: str = "21m00Tcm4TlvDq8ikWAM"
+    elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"  # Sarah (premade free-tier compatible)
     elevenlabs_tts_model: str = "eleven_flash_v2_5"
     elevenlabs_stt_mode: Literal["realtime", "segmented"] = "realtime"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.1-flash-lite"
+    gemini_use_vertex: bool = False
 
     # Audio & session guardrails
     audio_sample_rate: int = 16000
@@ -91,14 +92,16 @@ def load_settings(*, db_path: Path | None = None) -> Settings:
         log_level=os.getenv("LOG_LEVEL", "INFO").strip().upper(),
         db_path=db_path or Path(os.getenv("CLINIC_DB_PATH", str(BACKEND_ROOT / "clinic.db"))),
         elevenlabs_api_key=os.getenv("ELEVENLABS_API_KEY", "").strip(),
-        elevenlabs_voice_id=os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM").strip(),
+        elevenlabs_voice_id=os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL").strip(),
         elevenlabs_tts_model=os.getenv("ELEVENLABS_TTS_MODEL", "eleven_flash_v2_5").strip(),
         elevenlabs_stt_mode=stt_mode,
         gemini_api_key=(
             os.getenv("GEMINI_API_KEY", "").strip()
             or os.getenv("GOOGLE_API_KEY", "").strip()
         ),
-        gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
+        gemini_model=os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite").strip(),
+        gemini_use_vertex=os.getenv("GEMINI_USE_VERTEX", "false").strip().lower()
+        in ("1", "true", "yes"),
         max_concurrent_calls=int(os.getenv("MAX_CONCURRENT_CALLS", "10")),
         call_session_timeout_secs=int(os.getenv("CALL_SESSION_TIMEOUT_SECS", "600")),
         cors_origins=cors_origins,
