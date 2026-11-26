@@ -26,7 +26,7 @@ flowchart LR
         Ser["RawPCMFrameSerializer"]
         STT["ElevenLabs Scribe v2 STT"]
         VAD["Silero VAD + Turn Aggregator"]
-        LLM["Gemini 2.5 Flash (thinking_budget=0)"]
+        LLM["Gemini 3.1 Flash Lite"]
         TTS["ElevenLabs Flash v2.5 TTS"]
         Obs["User & Assistant Observers"]
     end
@@ -180,9 +180,9 @@ erDiagram
 ## 4. Real-Time Voice Latency & Frontend Sync
 
 - **Voice Latency**:
-  - `GoogleLLMService` sets `thinking_budget=0` and `temperature=0.35` on `gemini-2.5-flash` (eliminating multi-second thinking pauses before speech).
+  - `GoogleLLMService` defaults to `gemini-3.1-flash-lite` (sub-second voice responses on Google AI Studio free tier; supports `GEMINI_USE_VERTEX=true` for Vertex AI Express Mode and automatically sets `thinking_budget=0` when configured with Gemini 2.5 models).
   - `ElevenLabsRealtimeSTTService` (`scribe_v2_realtime`) pairs `CommitStrategy.MANUAL` with Pipecat's **Silero VAD** and passes physician names + specialties as `keyterms` (with `ELEVENLABS_STT_MODE=segmented` HTTP fallback).
-  - `ElevenLabsTTSService` runs `eleven_flash_v2_5` (~75 ms latency) with `apply_text_normalization="on"`.
+  - `ElevenLabsTTSService` runs `eleven_flash_v2_5` (~75 ms latency) with premade free-tier voice Sarah (`EXAVITQu4vr4xnSDxMaL`) and `apply_text_normalization="on"`.
   - `AssistantSpeechObserver` flushes partial text buffers cleanly on `InterruptionFrame` so barge-in never merges two turns.
 - **Session Isolation & Delta Sync**:
   - `POST /api/v1/calls` provisions an isolated `call_id` persisted in `call_sessions`.
